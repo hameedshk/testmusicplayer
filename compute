@@ -1,0 +1,412 @@
+
+AI-Assisted Development Assumptions
+
+| Parameter            | Estimate                           |
+| -------------------- | ---------------------------------- |
+| Team Size            | 6 Developers                       |
+| Project Duration     | 6 Months                           |
+| Development Approach | Human prompts using GitHub Copilot |
+| Technology Migration | .NET → Python, Angular → React     |
+| Codebase             | ~395K LOC                          |
+
+Estimated AI consumption
+
+| Metric                 |                                      Estimate |
+| ---------------------- | --------------------------------------------: |
+| Developers             |                                             6 |
+| Duration               |                                      6 Months |
+| Estimated Usage        | **60–120 Million Tokens / Developer / Month** |
+| Total Project Estimate |                    **2.2–4.3 Billion Tokens** |
+
+Note: This estimate assumes manual prompting with GitHub Copilot and excludes autonomous AI agent workflows.
+
+planning heuristic
+
+Step 1: Total LOC
+
+From your slide:
+
+Component	LOC
+Core	123,000
+MyAccount	90,000
+MyAccess	121,000
+MyAppConnect	30,000
+myPassword	31,000
+Total	395,000 LOC
+Step 2: Convert LOC to raw input tokens
+
+There is no official conversion, but a commonly used approximation for source code is:
+
+1 LOC ≈ 8–15 tokens (depends on language, comments, formatting, and naming).
+
+Using that range:
+
+Assumption	Input Tokens
+8 tokens/LOC	3.16 million
+10 tokens/LOC	3.95 million
+12 tokens/LOC	4.74 million
+15 tokens/LOC	5.93 million
+
+So the entire repository contains roughly 3–6 million input tokens, assuming every line is processed once.
+
+Step 3: Migration iterations
+
+A migration is not a single pass. If each file is processed multiple times, multiply accordingly.
+
+Average passes	Total Tokens
+2	8 million
+3	12 million
+5	20 million
+10	40 million
+
+For example, with 10 tokens/LOC:
+
+Initial read: 3.95M
+Five passes: 19.75M
+Ten passes: 39.5M
+Step 4: Include model output
+
+Migration also generates output.
+
+A reasonable approximation is:
+
+Output ≈ 60–100% of input
+
+So for 5 passes:
+
+Input: 19.75M
+Output: 12–20M
+
+Total: 32–40 million tokens
+
+Final LOC-Based Estimate
+Metric	Estimate
+Total LOC	395,000
+Raw repository size	3–6M tokens
+Typical migration (3–5 passes)	12–30M input tokens
+Including generated output	20–50M total tokens
+
+Think of it like this:
+
+Stage	Meaning	Example (10 tokens/LOC)
+Raw repository size	One complete read of the codebase	3.95M input tokens
+Typical migration input	Same code processed over multiple passes (e.g., 5 passes)	19.75M input tokens
+Generated output	Python/React code, tests, explanations produced by the AI	12–20M output tokens
+Total estimated project tokens	Migration input + Generated output	32–40M total tokens
+
+So the final calculation is:
+
+Total Tokens
+= Migration Input Tokens
++ Generated Output Tokens
+
+Estimated AI Token Consumption Based on Codebase Size
+
+| Component    |         LOC | Initial Repository Tokens (1 Pass) | Cumulative Input Tokens (5 Passes) | Estimated Output Tokens |   Total Estimated Tokens |
+| ------------ | ----------: | ---------------------------------: | ---------------------------------: | ----------------------: | -----------------------: |
+| Core         |     123,000 |                             1.23 M |                             6.15 M |                  4.92 M |              **11.07 M** |
+| MyAccount    |      90,000 |                             0.90 M |                             4.50 M |                  3.60 M |               **8.10 M** |
+| MyAccess     |     121,000 |                             1.21 M |                             6.05 M |                  4.84 M |              **10.89 M** |
+| MyAppConnect |      30,000 |                             0.30 M |                             1.50 M |                  1.20 M |               **2.70 M** |
+| myPassword   |      31,000 |                             0.31 M |                             1.55 M |                  1.24 M |               **2.79 M** |
+| **Total**    | **395,000** |                         **3.95 M** |                        **19.75 M** |             **15.80 M** | **35.55 Million Tokens** |
+
+
+Notes
+Initial Repository Tokens represent reading the entire codebase once.
+Cumulative Input Tokens assume the code is revisited approximately 5 times during migration (analysis, generation, refactoring, debugging, and review).
+Estimated Output Tokens represent generated Python/React code, unit tests, and documentation, assumed to be 80% of the cumulative input.
+
+Total Estimated Tokens = Cumulative Input Tokens + Estimated Output Tokens.
+
+AI Usage Throughout the Development Lifecycle
+
+| Activity                     | AI Usage |
+| ---------------------------- | -------: |
+| Understanding Existing Code  |      20% |
+| Code Generation & Migration  |      35% |
+| Refactoring & Optimization   |      15% |
+| Bug Fixing & Debugging       |      15% |
+| Unit & Integration Tests     |      10% |
+| Documentation & Explanations |       5% |
+
+Estimated AI Consumption
+
+| Metric                                              |            Estimate |
+| --------------------------------------------------- | ------------------: |
+| Working Days / Month                                |                  20 |
+| Average Prompts / Developer / Day                   |               40–60 |
+| Average Tokens / Prompt (Input + Output)            |         3,000–5,000 |
+| Estimated Tokens / Developer / Month                | **2.4–6.0 Million** |
+| Estimated Tokens / Project (6 Months, 6 Developers) |  **86–216 Million** |
+
+Key Assumptions
+Developers use GitHub Copilot primarily for:
+Code migration
+Refactoring
+Debugging
+Test generation
+Documentation
+Developers continue to perform design, reviews, testing, and validation manually.
+No autonomous AI agent workflows are assumed.
+
+
+
+Budget Recommendation
+Start with 100–200 million tokens (or equivalent AI Credits) for the first phase.
+Track GitHub Copilot AI Credit usage monthly.
+Refine the remaining project budget based on actual consumption.
+
+
+| Pass   | Purpose                                         |
+| ------ | ----------------------------------------------- |
+| Pass 1 | Understand/analyze the existing code            |
+| Pass 2 | Generate Python/React code                      |
+| Pass 3 | Fix compilation/build issues                    |
+| Pass 4 | Refactor and optimize                           |
+| Pass 5 | Generate tests, documentation, and final review |
+
+Each pass represents a typical AI-assisted interaction during migration, including code understanding, generation, debugging, refactoring, testing, and documentation. Actual iterations may vary by component complexity.
+
+
+Can we convert 135.5M tokens to GitHub Copilot cost?
+
+No—not accurately.
+
+The reason is that GitHub Copilot does not expose a fixed mapping such as:
+
+1M Claude Sonnet tokens = X AI Credits
+
+Sensitivity Analysis
+
+| Scenario     | Prompts/Day | Tokens/Prompt | Project Tokens |
+| ------------ | ----------: | ------------: | -------------: |
+| Conservative |          20 |         2,500 |        **36M** |
+| **Expected** |      **40** |     **3,000** |        **86M** |
+| Heavy        |          60 |         5,000 |       **216M** |
+
+Monthly AI Token Consumption Estimation (Interactive Prompting Only)
+
+Assumptions
+
+Developers: 6
+Working Days / Month: 20
+AI Model: Claude Sonnet
+Usage: Interactive Prompting (No Agent Mode)
+
+
+| Scenario     | Prompts / Developer / Day | Avg. Input Tokens / Prompt | Avg. Output Tokens / Prompt | **Total Tokens / Prompt** | **Tokens / Developer / Day**<br>(Prompts × Total Tokens) | **Tokens / Developer / Month**<br>(Day × 20) | **Developers** | **Team Tokens / Month**<br>(Developer Month × 6) |
+| ------------ | ------------------------: | -------------------------: | --------------------------: | ------------------------: | -------------------------------------------------------: | -------------------------------------------: | -------------: | -----------------------------------------------: |
+| Conservative |                        20 |                      1,500 |                       1,000 |                 **2,500** |                                               **50,000** |                         **1,000,000 (1.0M)** |              6 |                             **6,000,000 (6.0M)** |
+| Expected     |                        40 |                      2,000 |                       1,000 |                 **3,000** |                                              **120,000** |                         **2,400,000 (2.4M)** |              6 |                           **14,400,000 (14.4M)** |
+| Heavy        |                        60 |                      3,000 |                       2,000 |                 **5,000** |                                              **300,000** |                         **6,000,000 (6.0M)** |              6 |                           **36,000,000 (36.0M)** |
+
+
+Formula used
+
+| Calculation                | Formula                                    |
+| -------------------------- | ------------------------------------------ |
+| Total Tokens / Prompt      | Input Tokens + Output Tokens               |
+| Tokens / Developer / Day   | Prompts / Day × Total Tokens / Prompt      |
+| Tokens / Developer / Month | Tokens / Developer / Day × 20 Working Days |
+| Team Tokens / Month        | Tokens / Developer / Month × 6 Developers  |
+
+Example (Expected Scenario)
+Input Tokens / Prompt: 2,000
+Output Tokens / Prompt: 1,000
+Total Tokens / Prompt: 3,000
+40 Prompts / Day × 3,000 = 120,000 Tokens / Day
+120,000 × 20 = 2.4 Million Tokens / Developer / Month
+2.4M × 6 Developers = 14.4 Million Tokens / Team / Month
+
+Standard Sonnet 4.6 Pricing (after introductory period)
+
+
+| Component            | Price / 1M Tokens |                        |
+| -------------------- | ----------------: | ---------------------- |
+| Input                |         **$3.00** |                        |
+| Output               |        **$15.00** |                        |
+| Cache Write (5 min)  |         **$3.75** |                        |
+| Cache Write (1 hour) |         **$6.00** |                        |
+| Cache Read / Refresh |         **$0.30** | ([Claude Platform][1]) |
+
+[1]: https://platform.claude.com/docs/en/about-claude/pricing" Pricing - Claude Platform Docs"
+
+Example Using Your "Expected" Monthly Usage
+
+From our previous table:
+
+6 Developers
+14.4 Million Total Tokens / Month
+
+Assume:
+
+70% Input
+30% Output
+Input Tokens
+14.4M × 70%
+= 10.08M Input Tokens
+
+Cost:
+
+10.08 × $3
+= $30.24
+Output Tokens
+14.4M × 30%
+= 4.32M Output Tokens
+
+Cost:
+
+4.32 × $15
+= $64.80
+Total Monthly API Cost
+$30.24 + $64.80
+= $95.04 / Month
+Six-Month Cost
+$95.04 × 6
+≈ $570
+
+final summary 
+
+| Scenario             | Team Tokens / Month | Approx. API Cost / Month | Approx. Cost (6 Months) |
+| -------------------- | ------------------: | -----------------------: | ----------------------: |
+| Conservative (6M)    |                6.0M |                     ~$40 |                   ~$240 |
+| **Expected (14.4M)** |           **14.4M** |                 **~$95** |               **~$570** |
+| Heavy (36M)          |               36.0M |                    ~$238 |                 ~$1,428 |
+
+
+Slide 1 – AI Token Estimation Methodology
+
+Estimation Model
+
+
+Repository Size
+        ↓
+Repository Tokens
+        ↓
+Migration Passes
+        ↓
+Context Overhead
+        ↓
+Generated Output
+        ↓
+Total AI Tokens
+
+Formula
+
+Repository Tokens = LOC × Average Tokens per LOC
+
+Input Tokens =
+Repository Tokens × Migration Passes × Context Overhead
+
+Output Tokens =
+Input Tokens × Output Ratio
+
+Total Tokens =
+Input + Output
+
+Slide 2 – Project Assumptions
+
+| Parameter            | Value                          | Remarks             |
+| -------------------- | ------------------------------ | ------------------- |
+| Total LOC            | **395,000**                    | Backend + Frontend  |
+| Migration            | .NET → Python, Angular → React | Complete Rewrite    |
+| Developers           | **6**                          | Full-time           |
+| Duration             | **6 Months**                   |                     |
+| Average Tokens / LOC | **10**                         | Planning Assumption |
+| Repository Tokens    | **3.95 Million**               | LOC × Tokens/LOC    |
+
+
+Slide 3 – Migration Pass Analysis
+
+| Activity                    | Purpose                             | Repository Passes |
+| --------------------------- | ----------------------------------- | ----------------: |
+| Code Understanding          | Analyse existing implementation     |                 2 |
+| Python Code Generation      | Backend migration                   |                 4 |
+| React Code Generation       | Frontend migration                  |                 4 |
+| Refactoring                 | Improve generated code              |                 3 |
+| Build Fixes                 | Compilation & dependency resolution |                 2 |
+| Runtime Debugging           | Functional fixes                    |                 2 |
+| Test Generation             | Unit & Integration Tests            |                 2 |
+| Documentation               | Technical documentation             |                 1 |
+| Code Review Updates         | Review iterations                   |                 2 |
+| **Total Repository Passes** |                                     |            **22** |
+
+
+Slide 4 – Context Overhead
+Why Context Overhead Exists
+
+Every AI request includes more than the target file.
+
+Typical context includes:
+
+Current file
+Related DTOs
+Models
+Interfaces
+Shared Libraries
+Previous conversation
+Build errors
+Business rules
+Existing generated code
+
+| Metric             |    Value |
+| ------------------ | -------: |
+| Repository Tokens  |    3.95M |
+| Repository Passes  |       22 |
+| Context Multiplier | **2.5×** |
+
+
+Slide 5 – Token Calculation
+
+| Step                               | Formula        |                   Tokens |
+| ---------------------------------- | -------------- | -----------------------: |
+| Repository Size                    | 395K × 10      |                **3.95M** |
+| Migration Passes                   | 3.95M × 22     |                **86.9M** |
+| Context Overhead                   | 86.9M × 2.5    |        **217.25M Input** |
+| Generated Output                   | 217.25M × 100% |       **217.25M Output** |
+| **Estimated Total Project Tokens** | Input + Output | **434.5 Million Tokens** |
+
+
+Slide 6 – Sensitivity Analysis
+
+| Scenario     | Passes | Context | Output Ratio | Total Tokens |
+| ------------ | -----: | ------: | -----------: | -----------: |
+| Conservative |     15 |    2.0× |          80% |     **213M** |
+| Expected     |     22 |    2.5× |         100% |     **435M** |
+| Heavy        |     30 |    4.0× |         100% |     **948M** |
+
+
+Slide 7 – Claude Sonnet API Cost (Standard Pricing)
+
+| Scenario     | Total Tokens | Input Tokens | Output Tokens | Estimated Cost |
+| ------------ | -----------: | -----------: | ------------: | -------------: |
+| Conservative |         213M |         149M |           64M |   **≈ $1,400** |
+| Expected     |         435M |       304.5M |        130.5M |   **≈ $2,871** |
+| Heavy        |         948M |       663.6M |        284.4M |   **≈ $6,256** |
+
+Pricing assumptions (Anthropic standard):
+
+Input: $3 / 1M tokens
+Output: $15 / 1M tokens
+Input/Output split: 70% / 30%
+
+
+One important caveat
+
+This is not the total project cost. It is only the LLM inference cost if you were calling Claude Sonnet directly via Anthropic's API.
+
+Your total AI-related cost may also include:
+
+GitHub Copilot licenses or AI Credits (if using Copilot).
+CI/CD execution.
+Engineering time.
+Infrastructure.
+Security/compliance overhead.
+
+
+| Estimate Type                 |      Value |
+| ----------------------------- | ---------: |
+| Expected AI inference cost    | **~$2.9K** |
+| Upper-bound AI inference cost | **~$6.3K** |
+
