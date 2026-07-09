@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyIAM – Identity & Access Management</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #00205B; --amber: #E45011;
+  --white: #fff; --gray-50: #F8F9FB; --gray-100: #EEF0F4;
+  --gray-200: #D8DCE6; --gray-400: #9BA3B5; --gray-600: #5A6277; --gray-800: #2C3246;
+  --green: #1A7A4A; --red: #C0392B; --red-light: #FDECEA;
+  --orange: #E45011; --orange-light: #FFF3EE;
+  --blue: #1565C0; --blue-light: #E8F0FE;
+}
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gray-50); color: var(--gray-800); font-size: 14px; }
+
+/* TOPBAR */
+.topbar { background: var(--navy); height: 52px; display: flex; align-items: center; padding: 0 24px; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-brand { display: flex; align-items: center; gap: 12px; color: #fff; font-size: 15px; font-weight: 700; }
+.topbar-brand span { color: #ccc; font-size: 13px; font-weight: 400; padding-left: 12px; border-left: 1px solid rgba(255,255,255,0.3); }
+.topbar-icons { display: flex; align-items: center; gap: 18px; color: #fff; font-size: 13px; }
+.avatar-sm { width: 28px; height: 28px; border-radius: 50%; background: var(--amber); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.user-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* LAYOUT */
+.layout { display: flex; min-height: calc(100vh - 52px); }
+
+/* SIDEBAR */
+.sidebar { width: 230px; background: var(--white); border-right: 1px solid var(--gray-200); padding: 12px 0; flex-shrink: 0; }
+.sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; color: var(--gray-600); font-size: 13px; cursor: pointer; transition: background 0.1s; }
+.sidebar-item:hover { background: var(--gray-50); }
+.sidebar-item.active { color: var(--navy); font-weight: 600; background: var(--blue-light); border-left: 3px solid var(--navy); padding-left: 17px; }
+.sidebar-section { padding: 14px 20px 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-400); font-weight: 600; }
+
+/* MAIN */
+.main { flex: 1; padding: 24px 28px; overflow-y: auto; }
+
+/* PAGE */
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+.page-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
+
+/* ALERT BANNER */
+.alert-banner { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 8px; padding: 11px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 13px; color: #6D4C00; }
+.alert-cta { color: var(--amber); font-weight: 600; cursor: pointer; text-decoration: underline; margin-left: 8px; }
+
+/* IDENTITY CARD */
+.identity-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+.identity-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.identity-user { display: flex; align-items: center; gap: 12px; }
+.avatar-lg { width: 44px; height: 44px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
+.identity-name { font-size: 15px; font-weight: 700; }
+.identity-email { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+.view-full { font-size: 12px; color: var(--navy); cursor: pointer; }
+.identity-meta { display: flex; gap: 28px; border-top: 1px solid var(--gray-100); padding-top: 14px; flex-wrap: wrap; }
+.meta-item label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--gray-400); font-weight: 600; }
+.meta-item p { font-size: 13px; font-weight: 500; margin-top: 2px; }
+
+/* SECTION LABEL */
+.section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-400); font-weight: 600; margin-bottom: 10px; }
+
+/* ACCOUNT ROW */
+.account-row { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 13px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.account-icon { width: 34px; height: 34px; background: var(--gray-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.account-info { flex: 1; min-width: 0; }
+.account-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.account-meta { font-size: 12px; color: var(--gray-400); margin-top: 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.account-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* DOTS & BADGES */
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-green { background: var(--green); }
+.dot-red { background: var(--red); }
+.dot-orange { background: var(--orange); }
+.dot-gray { background: var(--gray-400); }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.badge-warning { background: #FFF3CD; color: #856404; border: 1px solid #FFE082; }
+.badge-locked { background: var(--red-light); color: var(--red); border: 1px solid #F5C6CB; }
+.badge-green { background: var(--green-light, #E6F4ED); color: var(--green); border: 1px solid #B7DFC8; }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+.badge-blue { background: var(--blue-light); color: var(--blue); border: 1px solid #BBDEFB; }
+.needs-sync { font-size: 11px; color: var(--orange); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+/* BUTTONS */
+.btn { padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; white-space: nowrap; }
+.btn-primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+.btn-primary:hover { background: #001A4A; }
+.btn-primary:disabled { background: var(--gray-200); color: var(--gray-400); border-color: var(--gray-200); cursor: not-allowed; }
+.btn-outline { background: var(--white); color: var(--navy); border-color: var(--gray-200); }
+.btn-outline:hover { border-color: var(--navy); }
+.btn-danger { background: var(--white); color: var(--red); border-color: var(--red); }
+.btn-danger:hover { background: var(--red-light); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-amber { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 12px; width: 520px; max-width: 96vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+.modal-wide { width: 700px; }
+.modal-header { padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: flex-start; position: sticky; top: 0; background: var(--white); z-index: 1; padding-bottom: 14px; border-bottom: 1px solid var(--gray-100); }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-subtitle { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+.modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--gray-400); }
+.modal-body { padding: 18px 24px; }
+.modal-footer { padding: 14px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; position: sticky; bottom: 0; background: var(--white); }
+
+/* INFO BANNER */
+.info-banner { background: var(--blue-light); border: 1px solid #BBDEFB; border-radius: 8px; padding: 11px 14px; font-size: 12px; color: var(--blue); display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px; line-height: 1.5; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 5px; display: block; }
+.form-input { width: 100%; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px; color: var(--gray-800); outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: var(--navy); }
+.form-select { width: 100%; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: 6px; font-size: 13px; color: var(--gray-800); outline: none; background: var(--white); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* PASSWORD REQUIREMENTS */
+.req-label { font-size: 11px; font-weight: 600; color: var(--gray-600); margin: 10px 0 6px; }
+.req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 16px; }
+.req-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.req-pass { color: var(--green); }
+.req-fail { color: var(--gray-400); }
+.temp-link-row { margin-top: 12px; font-size: 12px; color: var(--gray-400); }
+.temp-link { color: var(--navy); cursor: pointer; text-decoration: underline; }
+
+/* DOMAIN/SYNC */
+.domain-row { border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; }
+.domain-row:hover { border-color: var(--navy); }
+.domain-row.selected { border-color: var(--navy); background: #F0F4FF; }
+.domain-row.recommended { border-color: var(--amber); }
+.domain-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.domain-meta { font-size: 11px; color: var(--gray-400); margin-top: 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tag-recommended { font-size: 10px; font-weight: 700; color: var(--amber); background: var(--orange-light); padding: 2px 6px; border-radius: 4px; border: 1px solid #FACDB5; }
+.tag-synced { color: var(--green); font-size: 11px; }
+.tag-outofsync { color: var(--orange); font-size: 11px; }
+.view-attrs-link { font-size: 11px; color: var(--navy); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.attr-table { border: 1px solid var(--gray-200); border-radius: 8px; overflow: hidden; margin-bottom: 4px; }
+.attr-row { display: grid; padding: 8px 14px; font-size: 12px; border-bottom: 1px solid var(--gray-100); align-items: center; }
+.attr-row:last-child { border-bottom: none; }
+.prod-table .attr-row { grid-template-columns: 160px 1fr; }
+.val-table .attr-row { grid-template-columns: 160px 1fr 1fr; }
+.attr-header { background: var(--gray-50); font-weight: 700; font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+.attr-val { color: var(--gray-800); font-weight: 500; }
+.attr-after.change { color: var(--green); font-weight: 600; }
+.attr-after.same { color: var(--gray-400); }
+.val-attrs { display: none; margin: -6px 0 10px 28px; border-left: 2px solid var(--gray-200); padding-left: 12px; }
+.val-attrs.open { display: block; }
+
+/* SUCCESS */
+.success-state { text-align: center; padding: 16px 0 8px; }
+.success-icon { font-size: 44px; margin-bottom: 10px; }
+.success-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.success-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 14px; line-height: 1.5; }
+.temp-pw-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 20px; font-weight: 700; font-family: monospace; letter-spacing: 2px; color: var(--navy); margin-bottom: 8px; }
+.copy-btn { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray-400); }
+.copy-btn:hover { color: var(--navy); }
+.success-note { font-size: 11px; color: var(--orange); }
+
+/* TABLES */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 9px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gray-400); font-weight: 600; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+.data-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--gray-50); }
+.table-wrap { background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+
+/* CARDS */
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+.card { background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px; padding: 18px; }
+.card-icon { font-size: 20px; margin-bottom: 8px; }
+.card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.card-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; flex: 1; }
+.card-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; line-height: 1.4; }
+.card-footer { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+.card-count { font-size: 12px; color: var(--gray-600); font-weight: 600; }
+.role-badge { font-size: 10px; font-weight: 600; background: var(--blue-light); color: var(--blue); padding: 2px 6px; border-radius: 4px; }
+
+/* STAT ROW */
+.stat-row { display: flex; gap: 14px; margin-bottom: 20px; }
+.stat-box { background: var(--white); border: 1px solid var(--gray-200); border-radius: 10px; padding: 16px 20px; flex: 1; }
+.stat-num { font-size: 26px; font-weight: 700; color: var(--navy); }
+.stat-label { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+/* TABS */
+.inner-tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 2px solid var(--gray-200); }
+.inner-tab { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--gray-600); border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.inner-tab.active { color: var(--navy); font-weight: 600; border-bottom-color: var(--navy); }
+
+/* MFA DEVICE */
+.device-row { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.device-icon { font-size: 24px; width: 40px; text-align: center; flex-shrink: 0; }
+.device-info { flex: 1; }
+.device-name { font-size: 13px; font-weight: 600; }
+.device-meta { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+
+/* AUDIT */
+.audit-row { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); font-size: 12px; align-items: flex-start; }
+.audit-row:last-child { border-bottom: none; }
+.audit-time { color: var(--gray-400); white-space: nowrap; min-width: 130px; }
+.audit-event { color: var(--gray-800); flex: 1; }
+.audit-actor { color: var(--gray-400); min-width: 120px; }
+
+/* PROGRESS STEPS */
+.steps { display: flex; align-items: center; margin-bottom: 20px; }
+.step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--gray-400); }
+.step.active { color: var(--navy); font-weight: 600; }
+.step.done { color: var(--green); }
+.step-num { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.step.active .step-num { border-color: var(--navy); background: var(--navy); color: #fff; }
+.step.done .step-num { border-color: var(--green); background: var(--green); color: #fff; }
+.step-line { flex: 1; height: 2px; background: var(--gray-200); margin: 0 8px; }
+.step-line.done { background: var(--green); }
+
+/* TOGGLE */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--gray-200); position: relative; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0; }
+.toggle.on { background: var(--navy); }
+.toggle::after { content: ''; width: 16px; height: 16px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: left 0.2s; }
+.toggle.on::after { left: 21px; }
+.toggle-label { font-size: 13px; color: var(--gray-800); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #1A7A4A; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.2); display: none; z-index: 999; }
+
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { padding: 14px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .stat-row { flex-wrap: wrap; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">AIRBUS <span>MyIAM</span></div>
+  <div class="topbar-icons">
+    <span>🔍</span><span>🔔</span><span>❓</span><span>🌐</span>
+    <div class="user-label"><div class="avatar-sm">SS</div><span>Sarika Singh ▾</span></div>
+  </div>
+</div>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-item active" onclick="showPage('home',this)">🏠 Home</div>
+  <div class="sidebar-item" onclick="showPage('buddies',this)">👥 My Buddies</div>
+  <div class="sidebar-item" onclick="showPage('requests',this)">📋 Requests & Approvals</div>
+  <div class="sidebar-item" onclick="showPage('myaccess',this)">🔑 My Access</div>
+  <div class="sidebar-item" onclick="showPage('delegation',this)">🔄 Delegation</div>
+  <div class="sidebar-item" onclick="showPage('mfa',this)">🛡️ MFA Devices</div>
+  <div class="sidebar-item" onclick="showPage('profile',this)">👤 My Profile</div>
+  <div class="sidebar-section">Manage</div>
+  <div class="sidebar-item">📦 Application/Solution</div>
+  <div class="sidebar-item">📁 Identity Directory</div>
+  <div class="sidebar-item">👤 Accounts</div>
+  <div class="sidebar-item">👥 Groups ›</div>
+  <div class="sidebar-item">🔒 Policies ›</div>
+  <div class="sidebar-item">🔗 Scopes & Connectors</div>
+  <div class="sidebar-section">Hub</div>
+  <div class="sidebar-item">♡ Favourites</div>
+  <div class="sidebar-item">📊 Dashboard</div>
+</div>
+
+<div class="main">
+
+<!-- ════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="alert-banner" id="expiryBanner">
+    ⚠️ <span><strong>Your Windows login (Europe) password expires in 2 days.</strong> Update it now to avoid lockout.<span class="alert-cta" onclick="openModal('resetModal')">Update Password →</span></span>
+  </div>
+  <div class="identity-card">
+    <div class="identity-header">
+      <div class="identity-user">
+        <div class="avatar-lg">SS</div>
+        <div><div class="identity-name">Sarika Singh</div><div class="identity-email">sarika.singh@airbus.com</div></div>
+      </div>
+      <span class="view-full" onclick="showPage('profile', document.querySelectorAll('.sidebar-item')[6])">View Full Detail →</span>
+    </div>
+    <div class="identity-meta">
+      <div class="meta-item"><label>Identity ID</label><p>SSINY9FM</p></div>
+      <div class="meta-item"><label>Email ID</label><p>sarika.singh@airbus.com</p></div>
+      <div class="meta-item"><label>Department</label><p>IIDIVS</p></div>
+      <div class="meta-item"><label>Universal Logon</label><p>sarika.singh@airbus.com</p></div>
+      <div class="meta-item"><label>Location</label><p>Bengaluru</p></div>
+    </div>
+  </div>
+
+  <div class="section-label">My Login Accounts (Primary)</div>
+  <div class="account-row">
+    <div class="account-icon">🪟</div>
+    <div class="account-info">
+      <div class="account-name">Windows login (Europe) <span class="badge badge-warning">⚠ Expires in 2 days</span></div>
+      <div class="account-meta"><span>UID: SSINY9FM</span><span>Env: Prod</span><span><span class="dot dot-green"></span> Active</span><span>🕐 Last reset: 87 days ago</span></div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-outline btn-sm">Manage Kiosk</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('resetModal')">Update Password</button>
+    </div>
+  </div>
+  <div class="account-row">
+    <div class="account-icon">🪟</div>
+    <div class="account-info">
+      <div class="account-name">Windows login (AS-V) <span class="badge badge-locked">🔒 Locked</span></div>
+      <div class="account-meta"><span>UID: SSINY9FM</span><span>Env: Prod</span><span><span class="dot dot-green"></span> Active</span><span><span class="dot dot-red"></span> Locked</span><span>🕐 Last reset: 120 days ago</span></div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-outline btn-sm">Unlock Account</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('resetModal')">Reset Password</button>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:20px;">Non-Production Environments</div>
+  <div class="account-row">
+    <div class="account-icon">🪟</div>
+    <div class="account-info">
+      <div class="account-name">Validation Accounts (AS-V, ACDSLAN-V, ACDSDMZ-V)</div>
+      <div class="account-meta"><span>UID: SSINY9FM</span><span>Env: Prod</span><span><span class="dot dot-green"></span> Active</span><span>🕐 Last sync: 8 days ago</span><span class="needs-sync" id="needsSyncBadge">⚠ Needs Sync</span></div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-primary btn-sm" onclick="openModal('syncModal')">Sync Accounts</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: MY ACCESS
+════════════════════════════════════ -->
+<div id="page-myaccess" class="page">
+  <div class="page-title">My Access</div>
+  <div class="page-desc">View all your current application access, roles, and group memberships.</div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-num">12</div><div class="stat-label">Applications</div></div>
+    <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">Roles</div></div>
+    <div class="stat-box"><div class="stat-num">8</div><div class="stat-label">Groups</div></div>
+    <div class="stat-box"><div class="stat-num">2</div><div class="stat-label" style="color:var(--orange);">Expiring Soon</div></div>
+  </div>
+
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="switchTab('access','apps',this)">Applications (12)</div>
+    <div class="inner-tab" onclick="switchTab('access','roles',this)">Roles (5)</div>
+    <div class="inner-tab" onclick="switchTab('access','groups',this)">Groups (8)</div>
+  </div>
+
+  <div id="access-apps">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <input class="form-input" style="width:260px;" placeholder="🔍 Search applications...">
+      <button class="btn btn-primary btn-sm" onclick="openModal('requestAccessModal')">+ Request Access</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Application</th><th>Role / Entitlement</th><th>Granted On</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>MyPassword</td><td>Self Service User</td><td>01 Jan 2025</td><td>Never</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>MyAppConnect</td><td>Application Owner</td><td>15 Mar 2025</td><td>Never</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>SAP HR Portal</td><td>Employee Read</td><td>10 Jun 2025</td><td><span style="color:var(--orange);">15 Jul 2026</span></td><td><span class="badge badge-warning">Expiring</span></td><td><button class="btn btn-outline btn-sm">Renew</button></td></tr>
+          <tr><td>Confluence</td><td>Space Editor</td><td>20 Jan 2025</td><td>Never</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>Jira</td><td>Project Member</td><td>20 Jan 2025</td><td>Never</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>ServiceNow</td><td>ITSM Requester</td><td>01 Mar 2025</td><td><span style="color:var(--orange);">20 Jul 2026</span></td><td><span class="badge badge-warning">Expiring</span></td><td><button class="btn btn-outline btn-sm">Renew</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="access-roles" style="display:none;">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Role</th><th>Scope</th><th>Granted By</th><th>Since</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>IAM Admin – Read</td><td>IIDIVS Org</td><td>Manager Auto-assign</td><td>01 Jan 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>Product Owner</td><td>MyIAM Programme</td><td>Abhishek Reddy</td><td>15 Mar 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+          <tr><td>SAFe Release Train</td><td>PI Planning</td><td>System</td><td>01 Jun 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Remove</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="access-groups" style="display:none;">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Group</th><th>Type</th><th>Member Since</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>IIDIVS-All-Users</td><td>Distribution</td><td>01 Jan 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Leave</button></td></tr>
+          <tr><td>MyIAM-Developers</td><td>Security</td><td>15 Mar 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Leave</button></td></tr>
+          <tr><td>Airbus-Bengaluru</td><td>Location</td><td>01 Jan 2025</td><td><button class="btn btn-danger btn-sm" onclick="openModal('removeAccessModal')">Leave</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: REQUESTS & APPROVALS
+════════════════════════════════════ -->
+<div id="page-requests" class="page">
+  <div class="page-title">Requests & Approvals</div>
+  <div class="page-desc">Track your submitted requests and act on pending approvals.</div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-num">3</div><div class="stat-label">Pending</div></div>
+    <div class="stat-box"><div class="stat-num">8</div><div class="stat-label">Approved</div></div>
+    <div class="stat-box"><div class="stat-num">1</div><div class="stat-label">Rejected</div></div>
+    <div class="stat-box"><div class="stat-num">2</div><div class="stat-label" style="color:var(--amber);">Awaiting My Action</div></div>
+  </div>
+
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="switchTab('req','myreqs',this)">My Requests</div>
+    <div class="inner-tab" onclick="switchTab('req','approvalinbox',this)">Approval Inbox (2)</div>
+  </div>
+
+  <div id="req-myreqs">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="font-size:13px; color:var(--gray-600);">Showing all requests</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('requestAccessModal')">+ Request Access</button>
+        <button class="btn btn-outline btn-sm" onclick="openModal('requestOnBehalfModal')">+ Request on Behalf</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Request ID</th><th>Type</th><th>For</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>#REQ-2026-0041</td><td>Access Request</td><td>Workday HR – Employee</td><td>08 Jul 2026</td><td><span class="badge badge-warning">Pending Approval</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('withdrawModal')">Withdraw</button></td></tr>
+          <tr><td>#REQ-2026-0038</td><td>Role Request</td><td>SAFe Coach Role</td><td>05 Jul 2026</td><td><span class="badge badge-warning">Pending Approval</span></td><td><button class="btn btn-danger btn-sm" onclick="openModal('withdrawModal')">Withdraw</button></td></tr>
+          <tr><td>#REQ-2026-0031</td><td>Access Request</td><td>ServiceNow ITSM</td><td>01 Jun 2026</td><td><span class="badge badge-green">Approved</span></td><td>—</td></tr>
+          <tr><td>#REQ-2026-0022</td><td>Access Request</td><td>Confluence Space</td><td>20 Mar 2026</td><td><span class="badge badge-green">Approved</span></td><td>—</td></tr>
+          <tr><td>#REQ-2026-0019</td><td>Role Request</td><td>IAM Admin – Full</td><td>10 Feb 2026</td><td><span class="badge badge-locked">Rejected</span></td><td><button class="btn btn-outline btn-sm">Resubmit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="req-approvalinbox" style="display:none;">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Request ID</th><th>Requested By</th><th>For</th><th>Submitted</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>#REQ-2026-0043</td><td>Rahul Mehta</td><td>MyAppConnect – Publisher</td><td>09 Jul 2026</td><td><div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="showToast('✅ Request approved')">Approve</button><button class="btn btn-danger btn-sm" onclick="showToast('❌ Request rejected')">Reject</button></div></td></tr>
+          <tr><td>#REQ-2026-0042</td><td>Priya Nair</td><td>SAP HR – Manager View</td><td>08 Jul 2026</td><td><div style="display:flex;gap:6px;"><button class="btn btn-primary btn-sm" onclick="showToast('✅ Request approved')">Approve</button><button class="btn btn-danger btn-sm" onclick="showToast('❌ Request rejected')">Reject</button></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: BUDDIES
+════════════════════════════════════ -->
+<div id="page-buddies" class="page">
+  <div class="page-title">My Network / Buddies</div>
+  <div class="page-desc">Manage your trusted buddies and assist users/identities who rely on you.</div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">👤</div>
+      <div class="card-title">My Support Buddies</div>
+      <div class="card-desc">Your authorised buddies can reset your password on your behalf.</div>
+      <div class="card-note">ℹ️ Your Manager and Global IT have default access.</div>
+      <div class="card-footer"><span class="card-count">2 buddies</span><button class="btn btn-outline btn-sm">Manage Buddy List</button></div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤝</div>
+      <div class="card-title">Users I Support</div>
+      <div class="card-desc">Users who have added you as their buddy to help reset their password.</div>
+      <div class="card-note">ℹ️ Need to help someone else? <a style="color:var(--navy);cursor:pointer;">Search Identity Directory</a></div>
+      <div class="card-footer"><span class="card-count">5 users</span><button class="btn btn-outline btn-sm">Manage Assigned List</button></div>
+    </div>
+    <div class="card">
+      <div class="card-icon">👔</div>
+      <div class="card-title">My Team <span class="role-badge">Manager</span></div>
+      <div class="card-desc">As a manager, you can reset passwords for your direct reports.</div>
+      <div class="card-footer"><span class="card-count">30 reports</span><button class="btn btn-outline btn-sm">Manage Team</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: DELEGATION
+════════════════════════════════════ -->
+<div id="page-delegation" class="page">
+  <div class="page-title">Delegation</div>
+  <div class="page-desc">Assign a proxy approver when you are unavailable, or request temporary access for a project.</div>
+
+  <div class="section-label">Out-of-Office Delegation</div>
+  <div class="table-wrap" style="margin-bottom:20px;">
+    <table class="data-table">
+      <thead><tr><th>Delegate</th><th>Scope</th><th>From</th><th>To</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Rahul Mehta</td><td>All approvals</td><td>15 Jul 2026</td><td>22 Jul 2026</td><td><span class="badge badge-blue">Scheduled</span></td><td><button class="btn btn-danger btn-sm" onclick="showToast('Delegation cancelled')">Cancel</button></td></tr>
+        <tr><td colspan="6" style="text-align:center; color:var(--gray-400); padding:14px;">No other active delegations</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('delegationModal')" style="margin-bottom:28px;">+ Add Delegation</button>
+
+  <div class="section-label">Temporary / Time-Bound Access Requests</div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Application / Role</th><th>Reason</th><th>From</th><th>To</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Production DB – Read</td><td>P1 Incident Investigation</td><td>08 Jul 2026</td><td>09 Jul 2026</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="showToast('Access revoked')">Revoke</button></td></tr>
+        <tr><td colspan="6" style="text-align:center; color:var(--gray-400); padding:14px;">No other temporary access</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('tempAccessModal')" style="margin-top:12px;">+ Request Temporary Access</button>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: MFA DEVICES
+════════════════════════════════════ -->
+<div id="page-mfa" class="page">
+  <div class="page-title">MFA Devices</div>
+  <div class="page-desc">Manage your enrolled multi-factor authentication devices.</div>
+
+  <div class="device-row">
+    <div class="device-icon">📱</div>
+    <div class="device-info">
+      <div class="device-name">Microsoft Authenticator <span class="badge badge-green" style="margin-left:6px;">Primary</span></div>
+      <div class="device-meta">iPhone 14 Pro · Enrolled 01 Jan 2025 · Last used: Today</div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-outline btn-sm" onclick="showToast('Test notification sent to your device')">Test</button>
+      <button class="btn btn-danger btn-sm" onclick="openModal('removeMfaModal')">Remove</button>
+    </div>
+  </div>
+
+  <div class="device-row">
+    <div class="device-icon">🔑</div>
+    <div class="device-info">
+      <div class="device-name">YubiKey 5C</div>
+      <div class="device-meta">Hardware Token · Enrolled 15 Mar 2025 · Last used: 05 Jul 2026</div>
+    </div>
+    <div class="account-actions">
+      <button class="btn btn-danger btn-sm" onclick="openModal('removeMfaModal')">Remove</button>
+    </div>
+  </div>
+
+  <div class="device-row" style="border:1px dashed var(--gray-200); background:var(--gray-50);">
+    <div class="device-icon">➕</div>
+    <div class="device-info">
+      <div class="device-name" style="color:var(--navy); cursor:pointer;" onclick="openModal('enrollMfaModal')">Enroll a new device</div>
+      <div class="device-meta">Authenticator app, hardware token, or SMS</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openModal('enrollMfaModal')">Enroll</button>
+  </div>
+
+  <div class="section-label" style="margin-top:24px;">MFA Challenge Bypass</div>
+  <div style="background:var(--white); border:1px solid var(--gray-200); border-radius:10px; padding:16px 18px; font-size:13px; color:var(--gray-600); line-height:1.6;">
+    Lost access to your MFA device? <strong>Raise a bypass request</strong> — your manager or IT helpdesk will verify your identity and grant temporary access.
+    <div style="margin-top:10px;"><button class="btn btn-outline" onclick="showToast('Bypass request submitted — your manager has been notified')">Request MFA Bypass</button></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PAGE: MY PROFILE
+════════════════════════════════════ -->
+<div id="page-profile" class="page">
+  <div class="page-title">My Profile</div>
+  <div class="page-desc">View and update your personal information.</div>
+
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="switchTab('profile','info',this)">Personal Info</div>
+    <div class="inner-tab" onclick="switchTab('profile','audit',this)">Audit Trail</div>
+  </div>
+
+  <div id="profile-info">
+    <div style="background:var(--white); border:1px solid var(--gray-200); border-radius:10px; padding:22px 24px; max-width:600px;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" value="Sarika"></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" value="Singh"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Work Email</label><input class="form-input" value="sarika.singh@airbus.com" disabled style="background:var(--gray-50);"></div>
+      <div class="form-group"><label class="form-label">Alternate Email</label><input class="form-input" value="sarika.singh@gmail.com" placeholder="Add alternate email"></div>
+      <div class="form-group"><label class="form-label">Mobile Phone</label><input class="form-input" value="+91 98765 43210"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Department</label><input class="form-input" value="IIDIVS" disabled style="background:var(--gray-50);"></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" value="Bengaluru" disabled style="background:var(--gray-50);"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Manager</label><input class="form-input" value="Abhishek Reddy" placeholder="Search manager..."></div>
+      <div class="form-group"><label class="form-label">Preferred Language</label>
+        <select class="form-select"><option>English (US)</option><option>French</option><option>German</option><option>Spanish</option></select>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button class="btn btn-outline">Cancel</button>
+        <button class="btn btn-primary" onclick="showToast('✅ Profile updated successfully')">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profile-audit" style="display:none;">
+    <div class="table-wrap">
+      <div style="padding:14px 16px; border-bottom:1px solid var(--gray-100); display:flex; gap:10px;">
+        <input class="form-input" style="width:220px;" placeholder="🔍 Search events...">
+        <select class="form-select" style="width:160px;"><option>All events</option><option>Password</option><option>Access</option><option>Profile</option></select>
+      </div>
+      <div style="padding:14px 16px;">
+        <div class="audit-row"><span class="audit-time">09 Jul 2026, 09:12</span><span class="audit-event">Login successful — Windows (Europe)</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">08 Jul 2026, 17:44</span><span class="audit-event">Access request submitted — Workday HR</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">05 Jul 2026, 11:20</span><span class="audit-event">Password reset initiated</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">01 Jul 2026, 08:55</span><span class="audit-event">MFA device enrolled — YubiKey 5C</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">28 Jun 2026, 16:30</span><span class="audit-event">Alternate email updated</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">20 Jun 2026, 10:10</span><span class="audit-event">Validation accounts synced — ACDSLAN-V</span><span class="audit-actor">Self</span></div>
+        <div class="audit-row"><span class="audit-time">15 Jun 2026, 09:00</span><span class="audit-event">Role granted — Product Owner / MyIAM</span><span class="audit-actor">Abhishek Reddy</span></div>
+        <div class="audit-row"><span class="audit-time">10 Jun 2026, 14:22</span><span class="audit-event">Login failed — Windows (AS-V) — account locked</span><span class="audit-actor">System</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Reset Password</div><div class="modal-subtitle">System: Windows login (Europe)</div></div>
+      <button class="modal-close" onclick="closeModal('resetModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">New Password</label><input type="password" class="form-input" id="pw1" oninput="checkPw()" placeholder="Enter new password"></div>
+      <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" id="pw2" onblur="checkMatch()" oninput="checkMatchLive()" placeholder="Re-enter new password"></div>
+      <div class="req-label">Password Requirements</div>
+      <div class="req-grid">
+        <div class="req-item req-fail" id="r-len"><span class="dot dot-red" id="d-len"></span> Min 12 chars</div>
+        <div class="req-item req-fail" id="r-upper"><span class="dot dot-red" id="d-upper"></span> At least 1 uppercase</div>
+        <div class="req-item req-fail" id="r-num"><span class="dot dot-red" id="d-num"></span> At least 1 number</div>
+        <div class="req-item req-fail" id="r-special"><span class="dot dot-red" id="d-special"></span> At least 1 special char</div>
+        <div class="req-item req-fail" id="r-match"><span class="dot dot-red" id="d-match"></span> Passwords match</div>
+      </div>
+      <div class="temp-link-row">Not sure what to set? <span class="temp-link" onclick="closeModal('resetModal'); openModal('tempModal')">Generate a temporary password instead</span></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('resetModal')">Cancel</button>
+      <button class="btn btn-primary" id="setBtn" disabled onclick="doSetPassword()">Set Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Temp Password Modal -->
+<div class="modal-overlay" id="tempModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Reset Password</div><div class="modal-subtitle">System: Windows login (Europe)</div></div>
+      <button class="modal-close" onclick="closeModal('tempModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Temporary Password Generated</div>
+        <div class="success-desc">Use this password to log in. Change it immediately upon your first login.</div>
+        <div class="temp-pw-box"><span id="tempPw">xK9#mP2!qL5</span><button class="copy-btn" onclick="copyPw()" title="Copy">📋</button></div>
+        <div class="success-note">⚠️ This password expires in 24 hours</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="closeModal('tempModal'); clearExpiry()">Done</button></div>
+  </div>
+</div>
+
+<!-- Sync Modal -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div><div class="modal-title">Sync Validation Accounts</div><div class="modal-subtitle">Target Identity: Sarika Singh</div></div>
+      <button class="modal-close" onclick="closeModal('syncModal')">✕</button>
+    </div>
+    <div class="modal-body" id="syncStep1">
+      <div class="info-banner">ℹ️ This will securely copy your current Production attributes to the selected validation environments. Review the values below before confirming.</div>
+      <div class="section-label">Production Attributes (Source)</div>
+      <div class="attr-table prod-table" style="margin-bottom:16px;">
+        <div class="attr-row attr-header"><span>Attribute</span><span>Value</span></div>
+        <div class="attr-row"><span>Password Hash</span><span class="attr-val">••••••••••••</span></div>
+        <div class="attr-row"><span>Password Last Set</span><span class="attr-val">09 Jul 2026</span></div>
+        <div class="attr-row"><span>Account Status</span><span class="attr-val"><span class="dot dot-green" style="margin-right:4px;"></span>Active</span></div>
+        <div class="attr-row"><span>Password Expires</span><span class="attr-val" style="color:var(--orange);">11 Jul 2026 (2 days)</span></div>
+        <div class="attr-row"><span>UPN</span><span class="attr-val">sarika.singh@airbus.com</span></div>
+      </div>
+      <div class="section-label">Select Validation Environments (Target)</div>
+      <div class="domain-row" id="row-asv" onclick="toggleDomain('asv')">
+        <input type="checkbox" id="chk-asv" onclick="event.stopPropagation(); toggleDomainChk('asv')">
+        <div style="flex:1;"><div class="domain-name">AS-V Domain</div><div class="domain-meta"><span class="dot dot-green"></span> Active <span class="tag-synced">✔ Synced</span> <span>🕐 Last sync: Jan 20, 2026</span></div></div>
+        <span class="view-attrs-link" onclick="event.stopPropagation(); toggleAttrs('asv')">▼ View current attributes</span>
+      </div>
+      <div class="val-attrs" id="attrs-asv">
+        <div class="attr-table val-table"><div class="attr-row attr-header"><span>Attribute</span><span>Current Val Value</span><span>After Sync</span></div><div class="attr-row"><span>Password Hash</span><span class="attr-val">••••••••••••</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>Password Last Set</span><span class="attr-val">20 Jan 2026</span><span class="attr-after change">09 Jul 2026</span></div><div class="attr-row"><span>Account Status</span><span class="attr-val"><span class="dot dot-green" style="margin-right:4px;"></span>Active</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>Password Expires</span><span class="attr-val">21 Mar 2026</span><span class="attr-after change">11 Jul 2026</span></div><div class="attr-row"><span>UPN</span><span class="attr-val">sarika.singh@airbus.com</span><span class="attr-after same">No change</span></div></div>
+      </div>
+      <div class="domain-row recommended selected" id="row-acdslan" onclick="toggleDomain('acdslan')">
+        <input type="checkbox" id="chk-acdslan" checked onclick="event.stopPropagation(); toggleDomainChk('acdslan')">
+        <div style="flex:1;"><div class="domain-name">ACDSLAN-V Domain <span class="tag-recommended">Recommended — out of sync</span></div><div class="domain-meta"><span class="dot dot-green"></span> Active <span class="tag-outofsync">⚠ Out of sync</span> <span>🕐 Last sync: Jan 20, 2026</span></div></div>
+        <span class="view-attrs-link" onclick="event.stopPropagation(); toggleAttrs('acdslan')">▼ View current attributes</span>
+      </div>
+      <div class="val-attrs open" id="attrs-acdslan">
+        <div class="attr-table val-table"><div class="attr-row attr-header"><span>Attribute</span><span>Current Val Value</span><span>After Sync</span></div><div class="attr-row"><span>Password Hash</span><span class="attr-val">••••••••••••</span><span class="attr-after change">Will update</span></div><div class="attr-row"><span>Password Last Set</span><span class="attr-val" style="color:var(--orange);">20 Jan 2026</span><span class="attr-after change">09 Jul 2026</span></div><div class="attr-row"><span>Account Status</span><span class="attr-val"><span class="dot dot-green" style="margin-right:4px;"></span>Active</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>Password Expires</span><span class="attr-val" style="color:var(--red);">Expired (21 Mar 2026)</span><span class="attr-after change">11 Jul 2026</span></div><div class="attr-row"><span>UPN</span><span class="attr-val">sarika.singh@airbus.com</span><span class="attr-after same">No change</span></div></div>
+      </div>
+      <div class="domain-row" id="row-acdsdmz" onclick="toggleDomain('acdsdmz')">
+        <input type="checkbox" id="chk-acdsdmz" onclick="event.stopPropagation(); toggleDomainChk('acdsdmz')">
+        <div style="flex:1;"><div class="domain-name">ACDSDMZ-V Domain</div><div class="domain-meta"><span class="dot dot-green"></span> Active <span class="tag-synced">✔ Synced</span> <span>🕐 Last sync: Jan 20, 2026</span></div></div>
+        <span class="view-attrs-link" onclick="event.stopPropagation(); toggleAttrs('acdsdmz')">▼ View current attributes</span>
+      </div>
+      <div class="val-attrs" id="attrs-acdsdmz">
+        <div class="attr-table val-table"><div class="attr-row attr-header"><span>Attribute</span><span>Current Val Value</span><span>After Sync</span></div><div class="attr-row"><span>Password Hash</span><span class="attr-val">••••••••••••</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>Password Last Set</span><span class="attr-val">20 Jan 2026</span><span class="attr-after change">09 Jul 2026</span></div><div class="attr-row"><span>Account Status</span><span class="attr-val"><span class="dot dot-green" style="margin-right:4px;"></span>Active</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>Password Expires</span><span class="attr-val">21 Mar 2026</span><span class="attr-after change">11 Jul 2026</span></div><div class="attr-row"><span>UPN</span><span class="attr-val">sarika.singh@airbus.com</span><span class="attr-after same">No change</span></div></div>
+      </div>
+    </div>
+    <div class="modal-body" id="syncStep2" style="display:none;">
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Sync Completed Successfully</div>
+        <div class="success-desc">Production attributes have been copied to the selected environments.</div>
+      </div>
+      <div class="section-label">Updated Attributes</div>
+      <div class="attr-table val-table"><div class="attr-row attr-header"><span>Attribute</span><span>Before Sync</span><span>After Sync</span></div><div class="attr-row"><span>Password Hash</span><span class="attr-val">Old value</span><span class="attr-after change">✔ Updated</span></div><div class="attr-row"><span>Password Last Set</span><span class="attr-val" style="color:var(--orange);">20 Jan 2026</span><span class="attr-after change">✔ 09 Jul 2026</span></div><div class="attr-row"><span>Password Expires</span><span class="attr-val" style="color:var(--red);">Expired</span><span class="attr-after change">✔ 11 Jul 2026</span></div><div class="attr-row"><span>Account Status</span><span class="attr-val">Active</span><span class="attr-after same">No change</span></div><div class="attr-row"><span>UPN</span><span class="attr-val">sarika.singh@airbus.com</span><span class="attr-after same">No change</span></div></div>
+      <div style="margin-top:10px; font-size:12px; color:var(--gray-400);">🕐 Synced on 09 Jul 2026 at 14:32 IST</div>
+    </div>
+    <div class="modal-footer" id="syncFooter1"><button class="btn btn-outline" onclick="closeModal('syncModal')">Close</button><button class="btn btn-primary" onclick="doSync()">Sync Domains</button></div>
+    <div class="modal-footer" id="syncFooter2" style="display:none;"><button class="btn btn-primary" onclick="closeSyncSuccess()">Done</button></div>
+  </div>
+</div>
+
+<!-- Request Access Modal -->
+<div class="modal-overlay" id="requestAccessModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Request Access</div><div class="modal-subtitle">Submit a new access request</div></div>
+      <button class="modal-close" onclick="closeModal('requestAccessModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="steps">
+        <div class="step active"><div class="step-num">1</div> Select</div>
+        <div class="step-line"></div>
+        <div class="step"><div class="step-num">2</div> Details</div>
+        <div class="step-line"></div>
+        <div class="step"><div class="step-num">3</div> Confirm</div>
+      </div>
+      <div class="form-group"><label class="form-label">Application / Resource</label><input class="form-input" placeholder="Search application or role..."></div>
+      <div class="form-group"><label class="form-label">Access Level</label><select class="form-select"><option>Select access level...</option><option>Read Only</option><option>Standard User</option><option>Power User</option><option>Admin</option></select></div>
+      <div class="form-group"><label class="form-label">Business Justification</label><textarea class="form-input" rows="3" placeholder="Why do you need this access?"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Access From</label><input type="date" class="form-input" value="2026-07-09"></div>
+        <div class="form-group"><label class="form-label">Access Until (optional)</label><input type="date" class="form-input"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('requestAccessModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('requestAccessModal'); showToast('✅ Access request submitted — pending approval')">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Request on Behalf Modal -->
+<div class="modal-overlay" id="requestOnBehalfModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Request on Behalf</div><div class="modal-subtitle">Request access for a team member</div></div>
+      <button class="modal-close" onclick="closeModal('requestOnBehalfModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">For User</label><input class="form-input" placeholder="Search user by name or ID..."></div>
+      <div class="form-group"><label class="form-label">Application / Resource</label><input class="form-input" placeholder="Search application or role..."></div>
+      <div class="form-group"><label class="form-label">Access Level</label><select class="form-select"><option>Select access level...</option><option>Read Only</option><option>Standard User</option><option>Power User</option></select></div>
+      <div class="form-group"><label class="form-label">Business Justification</label><textarea class="form-input" rows="3" placeholder="Why does this user need this access?"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('requestOnBehalfModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('requestOnBehalfModal'); showToast('✅ Request submitted on behalf of user')">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Access Confirm Modal -->
+<div class="modal-overlay" id="removeAccessModal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div><div class="modal-title">Remove Access</div></div>
+      <button class="modal-close" onclick="closeModal('removeAccessModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px; color:var(--gray-600); line-height:1.6;">Are you sure you want to remove this access? This action will take effect immediately and cannot be undone without submitting a new request.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('removeAccessModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('removeAccessModal'); showToast('✅ Access removed successfully')">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Withdraw Request Modal -->
+<div class="modal-overlay" id="withdrawModal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div><div class="modal-title">Withdraw Request</div></div>
+      <button class="modal-close" onclick="closeModal('withdrawModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Reason for withdrawal (optional)</label><textarea class="form-input" rows="3" placeholder="Add a reason..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('withdrawModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('withdrawModal'); showToast('Request withdrawn')">Withdraw</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delegation Modal -->
+<div class="modal-overlay" id="delegationModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Add Delegation</div><div class="modal-subtitle">Assign a proxy approver during your absence</div></div>
+      <button class="modal-close" onclick="closeModal('delegationModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Delegate To</label><input class="form-input" placeholder="Search user by name or ID..."></div>
+      <div class="form-group"><label class="form-label">Delegation Scope</label><select class="form-select"><option>All approvals</option><option>Access requests only</option><option>Password resets only</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input type="date" class="form-input" value="2026-07-15"></div>
+        <div class="form-group"><label class="form-label">To</label><input type="date" class="form-input" value="2026-07-22"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-input" rows="2" placeholder="Any instructions for your delegate..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('delegationModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('delegationModal'); showToast('✅ Delegation set up successfully')">Save Delegation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Temp Access Modal -->
+<div class="modal-overlay" id="tempAccessModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Request Temporary Access</div><div class="modal-subtitle">Time-bound access for a specific need</div></div>
+      <button class="modal-close" onclick="closeModal('tempAccessModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Application / Resource</label><input class="form-input" placeholder="Search application or role..."></div>
+      <div class="form-group"><label class="form-label">Access Level</label><select class="form-select"><option>Select...</option><option>Read Only</option><option>Standard User</option><option>Elevated / Admin</option></select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">From</label><input type="date" class="form-input" value="2026-07-09"></div>
+        <div class="form-group"><label class="form-label">To</label><input type="date" class="form-input"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Reason / Justification</label><textarea class="form-input" rows="3" placeholder="e.g. P1 incident investigation, project deadline..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('tempAccessModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('tempAccessModal'); showToast('✅ Temporary access request submitted')">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Enroll MFA Modal -->
+<div class="modal-overlay" id="enrollMfaModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Enroll New MFA Device</div></div>
+      <button class="modal-close" onclick="closeModal('enrollMfaModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Device Type</label>
+        <select class="form-select" id="mfaType" onchange="updateMfaInstructions()">
+          <option value="">Select device type...</option>
+          <option value="app">Authenticator App (Microsoft / Google)</option>
+          <option value="hw">Hardware Token (YubiKey)</option>
+          <option value="sms">SMS / Phone</option>
+        </select>
+      </div>
+      <div id="mfaInstructions" style="display:none; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:8px; padding:14px; font-size:13px; color:var(--gray-600); line-height:1.6; margin-top:4px;"></div>
+      <div class="form-group" style="margin-top:14px;"><label class="form-label">Device Name (for your reference)</label><input class="form-input" placeholder="e.g. Work iPhone, Office YubiKey"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('enrollMfaModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('enrollMfaModal'); showToast('✅ MFA device enrolled successfully')">Enroll Device</button>
+    </div>
+  </div>
+</div>
+
+<!-- Remove MFA Modal -->
+<div class="modal-overlay" id="removeMfaModal">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div><div class="modal-title">Remove MFA Device</div></div>
+      <button class="modal-close" onclick="closeModal('removeMfaModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px; color:var(--gray-600); line-height:1.6;">Removing this device means you will not be able to use it for login. Ensure you have at least one other MFA device enrolled before proceeding.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('removeMfaModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('removeMfaModal'); showToast('MFA device removed')">Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Navigation
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// Inner tabs
+function switchTab(page, tab, el) {
+  const prefix = page + '-';
+  document.querySelectorAll('[id^="' + prefix + '"]').forEach(t => t.style.display = 'none');
+  document.getElementById(prefix + tab).style.display = 'block';
+  el.closest('.inner-tabs').querySelectorAll('.inner-tab').forEach(t => t.classList.r

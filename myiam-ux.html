@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyIAM – Identity & Access Management</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #00205B;
+    --amber: #E45011;
+    --amber-light: #F5E6DF;
+    --white: #FFFFFF;
+    --gray-50: #F8F9FB;
+    --gray-100: #EEF0F4;
+    --gray-200: #D8DCE6;
+    --gray-400: #9BA3B5;
+    --gray-600: #5A6277;
+    --gray-800: #2C3246;
+    --green: #1A7A4A;
+    --green-light: #E6F4ED;
+    --red: #C0392B;
+    --red-light: #FDECEA;
+    --orange: #E45011;
+    --orange-light: #FFF3EE;
+    --blue-info: #1565C0;
+    --blue-info-light: #E8F0FE;
+    --locked: #C0392B;
+    --active: #1A7A4A;
+    --font: 'Segoe UI', Arial, sans-serif;
+  }
+
+  body { font-family: var(--font); background: var(--gray-50); color: var(--gray-800); font-size: 14px; }
+
+  /* NAV */
+  .topbar {
+    background: var(--navy);
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; color: var(--white); font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+  .topbar-brand span { color: var(--amber); font-size: 13px; font-weight: 400; padding-left: 12px; border-left: 1px solid rgba(255,255,255,0.3); }
+  .topbar-icons { display: flex; align-items: center; gap: 20px; color: var(--white); font-size: 13px; cursor: pointer; }
+  .topbar-icons .user { display: flex; align-items: center; gap: 8px; }
+  .avatar-sm { width: 28px; height: 28px; border-radius: 50%; background: var(--amber); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 52px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--white);
+    border-right: 1px solid var(--gray-200);
+    padding: 16px 0;
+    flex-shrink: 0;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    color: var(--gray-600); font-size: 13px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sidebar-item:hover { background: var(--gray-50); }
+  .sidebar-item.active { color: var(--navy); font-weight: 600; background: var(--blue-info-light); border-left: 3px solid var(--navy); }
+  .sidebar-section { padding: 16px 20px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-400); font-weight: 600; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 28px 32px; max-width: 960px; }
+
+  /* PAGE TABS */
+  .page-tabs { display: flex; gap: 4px; margin-bottom: 28px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 7px 16px; border-radius: 6px; border: 1px solid var(--gray-200);
+    background: var(--white); color: var(--gray-600); font-size: 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: var(--navy); color: var(--navy); }
+  .tab-btn.active { background: var(--navy); color: var(--white); border-color: var(--navy); }
+
+  /* SCREEN */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* IDENTITY CARD */
+  .identity-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+  }
+  .identity-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .identity-user { display: flex; align-items: center; gap: 14px; }
+  .avatar-lg { width: 48px; height: 48px; border-radius: 50%; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
+  .identity-name { font-size: 16px; font-weight: 600; color: var(--gray-800); }
+  .identity-email { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+  .view-full { font-size: 12px; color: var(--navy); cursor: pointer; text-decoration: none; }
+  .identity-meta { display: flex; gap: 36px; border-top: 1px solid var(--gray-100); padding-top: 18px; }
+  .meta-item label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-400); font-weight: 600; }
+  .meta-item p { font-size: 13px; color: var(--gray-800); margin-top: 4px; font-weight: 500; }
+
+  /* SECTION HEADER */
+  .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-400); font-weight: 600; margin-bottom: 12px; }
+
+  /* ACCOUNT ROW */
+  .account-row {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .account-icon { width: 36px; height: 36px; background: var(--gray-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .account-info { flex: 1; }
+  .account-name { font-size: 14px; font-weight: 600; color: var(--gray-800); display: flex; align-items: center; gap: 8px; }
+  .account-meta { font-size: 12px; color: var(--gray-400); margin-top: 4px; display: flex; gap: 12px; align-items: center; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-warning { background: #FFF3CD; color: #856404; border: 1px solid #FFEAA7; }
+  .badge-error { background: var(--red-light); color: var(--red); border: 1px solid #F5C6CB; }
+  .badge-active { color: var(--active); }
+  .badge-locked { color: var(--locked); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .dot-green { background: var(--active); }
+  .dot-red { background: var(--locked); }
+  .account-actions { display: flex; gap: 8px; }
+
+  /* ALERT BANNER */
+  .alert-banner {
+    background: var(--orange-light);
+    border: 1px solid #FACDB5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #7A2800;
+  }
+  .alert-banner-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid transparent; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--navy); color: var(--white); border-color: var(--navy); }
+  .btn-primary:hover { background: #001A4A; }
+  .btn-primary:disabled { background: var(--gray-200); color: var(--gray-400); border-color: var(--gray-200); cursor: not-allowed; }
+  .btn-outline { background: var(--white); color: var(--navy); border-color: var(--gray-200); }
+  .btn-outline:hover { border-color: var(--navy); }
+  .btn-danger { background: var(--white); color: var(--red); border-color: var(--red); }
+  .btn-ghost { background: transparent; color: var(--gray-600); border-color: transparent; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 12px;
+    width: 480px; max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 20px 24px 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+  .modal-subtitle { font-size: 12px; color: var(--gray-400); margin-top: 3px; }
+  .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--gray-400); padding: 4px; line-height: 1; }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* INFO BANNER */
+  .info-banner {
+    background: var(--blue-info-light);
+    border: 1px solid #BBDEFB;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--blue-info);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+  .info-banner-close { position: absolute; right: 10px; top: 10px; background: none; border: none; cursor: pointer; color: var(--blue-info); font-size: 14px; }
+
+  /* DOMAIN ROW */
+  .domain-row {
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .domain-row:hover { border-color: var(--navy); }
+  .domain-row.selected { border-color: var(--navy); background: #F0F4FF; }
+  .domain-row.recommended { border-color: var(--amber); }
+  .domain-info { flex: 1; }
+  .domain-name { font-size: 13px; font-weight: 600; color: var(--gray-800); display: flex; align-items: center; gap: 8px; }
+  .domain-meta { font-size: 11px; color: var(--gray-400); margin-top: 4px; display: flex; gap: 10px; align-items: center; }
+  .tag-recommended { font-size: 10px; font-weight: 700; color: var(--amber); background: var(--orange-light); padding: 2px 7px; border-radius: 4px; border: 1px solid #FACDB5; }
+  .tag-synced { font-size: 11px; color: var(--active); display: flex; align-items: center; gap: 4px; }
+  .tag-outofsync { font-size: 11px; color: var(--orange); display: flex; align-items: center; gap: 4px; }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid var(--gray-200); border-radius: 6px;
+    font-size: 13px; color: var(--gray-800);
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--navy); }
+  .form-input.error { border-color: var(--red); }
+
+  /* PASSWORD REQUIREMENTS */
+  .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin-top: 12px; }
+  .req-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .req-item .dot { flex-shrink: 0; }
+  .req-pass { color: var(--active); }
+  .req-fail { color: var(--gray-400); }
+  .req-error { color: var(--red); }
+  .req-section-label { font-size: 11px; font-weight: 600; color: var(--gray-600); margin-top: 14px; margin-bottom: 6px; }
+
+  .temp-link { font-size: 12px; color: var(--navy); cursor: pointer; text-decoration: underline; }
+  .in-a-rush { font-size: 12px; color: var(--gray-400); }
+
+  /* SUCCESS STATE */
+  .success-state { text-align: center; padding: 24px 0 12px; }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-title { font-size: 16px; font-weight: 700; color: var(--gray-800); margin-bottom: 8px; }
+  .success-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
+  .temp-password-box {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 2px;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .copy-btn { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--gray-400); }
+  .copy-btn:hover { color: var(--navy); }
+  .success-note { font-size: 11px; color: var(--orange); display: flex; align-items: center; gap: 5px; justify-content: center; }
+
+  /* BUDDY CARDS */
+  .buddy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .buddy-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .buddy-card-icon { font-size: 22px; margin-bottom: 10px; }
+  .buddy-card-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 8px; }
+  .buddy-card-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; flex: 1; }
+  .buddy-card-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; display: flex; align-items: flex-start; gap: 5px; line-height: 1.4; }
+  .buddy-card-footer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+  .buddy-count { font-size: 12px; color: var(--gray-600); font-weight: 600; }
+
+  /* NON-PROD */
+  .non-prod-row {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .needs-sync-badge { font-size: 11px; color: var(--orange); display: flex; align-items: center; gap: 4px; font-weight: 600; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--navy); color: white;
+    padding: 12px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    display: none; z-index: 999;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* CHECKBOX */
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--navy); cursor: pointer; flex-shrink: 0; }
+
+  /* SCREEN TITLE */
+  .screen-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .screen-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 24px; }
+
+  @media (max-width: 700px) {
+    .buddy-grid { grid-template-columns: 1fr; }
+    .identity-meta { flex-wrap: wrap; gap: 16px; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    AIRBUS <span>MyIAM</span>
+  </div>
+  <div class="topbar-icons">
+    <span>🔍</span>
+    <span>🔔</span>
+    <span>❓</span>
+    <span>🌐</span>
+    <div class="user">
+      <div class="avatar-sm">SS</div>
+      <span>Sarika Singh ▾</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-item active">🏠 Home</div>
+    <div class="sidebar-item" onclick="showScreen('buddies')">👥 My Buddies</div>
+    <div class="sidebar-item">📋 Requests & Approvals</div>
+    <div class="sidebar-item">➕ Create New Asset</div>
+    <div class="sidebar-section">Manage</div>
+    <div class="sidebar-item">📦 Application/Solution</div>
+    <div class="sidebar-item">📁 Identity Directory</div>
+    <div class="sidebar-item">👤 Accounts</div>
+    <div class="sidebar-item">👥 Groups ›</div>
+    <div class="sidebar-item">🔒 Policies ›</div>
+    <div class="sidebar-item">🔗 Scopes & Connectors</div>
+    <div class="sidebar-section">Hub</div>
+    <div class="sidebar-item">♡ Favourites</div>
+    <div class="sidebar-item">📊 Dashboard</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PAGE TABS -->
+    <div class="page-tabs">
+      <button class="tab-btn active" onclick="showScreen('home', this)">Home / Identity Overview</button>
+      <button class="tab-btn" onclick="showScreen('reset', this)">Reset Password</button>
+      <button class="tab-btn" onclick="showScreen('sync', this)">Sync Validation Accounts</button>
+      <button class="tab-btn" onclick="showScreen('buddies', this)">My Network / Buddies</button>
+    </div>
+
+    <!-- ======== SCREEN 1: HOME ======== -->
+    <div id="screen-home" class="screen active">
+
+      <!-- Expiry alert banner -->
+      <div class="alert-banner">
+        <div class="alert-banner-icon">⚠️</div>
+        <div>
+          <strong>Your Windows login (Europe) password expires in 2 days.</strong>
+          Update it now to avoid being locked out.
+          <span style="color: var(--amber); cursor:pointer; text-decoration:underline; margin-left:6px;" onclick="openModal('resetModal')">Update Password →</span>
+        </div>
+      </div>
+
+      <!-- Identity card -->
+      <div class="identity-card">
+        <div class="identity-header">
+          <div class="identity-user">
+            <div class="avatar-lg">SS</div>
+            <div>
+              <div class="identity-name">Sarika Singh</div>
+              <div class="identity-email">sarika.singh@airbus.com</div>
+            </div>
+          </div>
+          <a class="view-full">View Full Detail →</a>
+        </div>
+        <div class="identity-meta">
+          <div class="meta-item"><label>Identity ID</label><p>SSINY9FM</p></div>
+          <div class="meta-item"><label>Email ID</label><p>sarika.singh@airbus.com</p></div>
+          <div class="meta-item"><label>Department</label><p>IIDIVS</p></div>
+          <div class="meta-item"><label>Universal Logon</label><p>sarika.singh@airbus.com</p></div>
+          <div class="meta-item"><label>Location</label><p>Bengaluru</p></div>
+        </div>
+      </div>
+
+      <!-- Primary accounts -->
+      <div class="section-label">My Login Accounts (Primary)</div>
+
+      <div class="account-row">
+        <div class="account-icon">🪟</div>
+        <div class="account-info">
+          <div class="account-name">
+            Windows login (Europe)
+            <span class="badge badge-warning">⚠ Expires in 2 days</span>
+          </div>
+          <div class="account-meta">
+            <span>UID: SSINY9FM</span>
+            <span>Env: Prod</span>
+            <span><span class="dot dot-green"></span> Active</span>
+            <span>🕐 Last reset: 87 days ago</span>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="btn btn-outline" onclick="alert('Kiosk management')">Manage Kiosk</button>
+          <button class="btn btn-primary" onclick="openModal('resetModal')">Update Password</button>
+        </div>
+      </div>
+
+      <div class="account-row">
+        <div class="account-icon">🪟</div>
+        <div class="account-info">
+          <div class="account-name">
+            Windows login (AS-V)
+            <span class="badge badge-error">🔒 Locked</span>
+          </div>
+          <div class="account-meta">
+            <span>UID: SSINY9FM</span>
+            <span>Env: Prod</span>
+            <span><span class="dot dot-green"></span> Active</span>
+            <span><span class="dot dot-red"></span> Locked</span>
+            <span>🕐 Last reset: 120 days ago</span>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="btn btn-outline">Unlock Account</button>
+          <button class="btn btn-primary" onclick="openModal('resetModal')">Reset Password</button>
+        </div>
+      </div>
+
+      <!-- Non-production -->
+      <div class="section-label" style="margin-top:24px;">Non-Production Environments</div>
+
+      <div class="non-prod-row">
+        <div class="account-icon">🪟</div>
+        <div class="account-info">
+          <div class="account-name">Validation Accounts (AS-V, ACDSLAN-V, ACDSDMZ-V)</div>
+          <div class="account-meta">
+            <span>UID: SSINY9FM</span>
+            <span>Env: Prod</span>
+            <span><span class="dot dot-green"></span> Active</span>
+            <span>🕐 Last sync: 8 days ago</span>
+            <span class="needs-sync-badge">⚠ Needs Sync</span>
+          </div>
+        </div>
+        <div class="account-actions">
+          <button class="btn btn-primary" onclick="openModal('syncModal')">Sync Accounts</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======== SCREEN 2: RESET PASSWORD ======== -->
+    <div id="screen-reset" class="screen">
+      <div class="screen-title">Reset Password</div>
+      <div class="screen-desc">Update your password for Windows login (Europe)</div>
+      <div style="max-width: 480px; background: white; border: 1px solid var(--gray-200); border-radius: 10px; padding: 28px;">
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input type="password" class="form-input" id="pw1" oninput="checkPassword()" placeholder="Enter new password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" class="form-input" id="pw2" onblur="checkMatch()" oninput="checkMatchLive()" placeholder="Re-enter new password">
+        </div>
+        <div class="req-section-label">Password Requirements</div>
+        <div class="req-grid">
+          <div class="req-item req-fail" id="req-len"><span class="dot dot-red"></span> Min 12 chars</div>
+          <div class="req-item req-fail" id="req-upper"><span class="dot dot-red"></span> At least 1 uppercase</div>
+          <div class="req-item req-fail" id="req-num"><span class="dot dot-red"></span> At least 1 number</div>
+          <div class="req-item req-fail" id="req-special"><span class="dot dot-red"></span> At least 1 special char</div>
+          <div class="req-item req-fail" id="req-match"><span class="dot dot-red"></span> Passwords match</div>
+        </div>
+        <div style="margin-top: 20px; display: flex; align-items: center; gap: 6px;">
+          <span class="in-a-rush">Not sure what to set?</span>
+          <span class="temp-link" onclick="showScreen('home'); setTimeout(()=>openModal('tempModal'),100)">Generate a temporary password instead</span>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-outline" onclick="showScreen('home', document.querySelector('.tab-btn'))">Cancel</button>
+          <button class="btn btn-primary" id="setPasswordBtn" disabled onclick="doSetPassword()">Set Password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== SCREEN 3: SYNC ======== -->
+    <div id="screen-sync" class="screen">
+      <div class="screen-title">Sync Validation Accounts</div>
+      <div class="screen-desc">Target Identity: Sarika Singh</div>
+      <div style="max-width: 500px; background: white; border: 1px solid var(--gray-200); border-radius: 10px; padding: 24px;">
+        <div class="info-banner">
+          ℹ️ This will securely copy your current Production password to the selected validation environments.
+          <button class="info-banner-close">✕</button>
+        </div>
+        <div class="section-label">Select Environment</div>
+
+        <!-- AS-V — already synced, not pre-selected -->
+        <div class="domain-row" id="domain-asv" onclick="toggleDomain('asv')">
+          <input type="checkbox" id="chk-asv">
+          <div class="domain-info">
+            <div class="domain-name">AS-V Domain</div>
+            <div class="domain-meta">
+              <span class="dot dot-green"></span> Active
+              <span class="tag-synced">✔ Synced</span>
+              <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACDSLAN-V — out of sync, pre-selected + recommended -->
+        <div class="domain-row recommended selected" id="domain-acdslan" onclick="toggleDomain('acdslan')">
+          <input type="checkbox" id="chk-acdslan" checked>
+          <div class="domain-info">
+            <div class="domain-name">
+              ACDSLAN-V Domain
+              <span class="tag-recommended">Recommended</span>
+            </div>
+            <div class="domain-meta">
+              <span class="dot dot-green"></span> Active
+              <span class="tag-outofsync">⚠ Out of sync</span>
+              <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACDSDMZ-V — synced, not pre-selected -->
+        <div class="domain-row" id="domain-acdsdmz" onclick="toggleDomain('acdsdmz')">
+          <input type="checkbox" id="chk-acdsdmz">
+          <div class="domain-info">
+            <div class="domain-name">ACDSDMZ-V Domain</div>
+            <div class="domain-meta">
+              <span class="dot dot-green"></span> Active
+              <span class="tag-synced">✔ Synced</span>
+              <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+          <button class="btn btn-outline">Cancel</button>
+          <button class="btn btn-primary" id="syncBtn" onclick="doSync()">Sync Domains</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== SCREEN 4: BUDDIES ======== -->
+    <div id="screen-buddies" class="screen">
+      <div class="screen-title">My Network / Buddies</div>
+      <div class="screen-desc">Manage your trusted buddies and assist users/identities who rely on you.</div>
+      <div class="buddy-grid">
+
+        <div class="buddy-card">
+          <div class="buddy-card-icon">👤</div>
+          <div class="buddy-card-title">My Support Buddies</div>
+          <div class="buddy-card-desc">Your authorised buddies can reset your password on your behalf.</div>
+          <div class="buddy-card-note">ℹ️ Your Manager and Global IT have default access.</div>
+          <div class="buddy-card-footer">
+            <span class="buddy-count">2 buddies</span>
+            <button class="btn btn-outline">Manage Buddy List</button>
+          </div>
+        </div>
+
+        <div class="buddy-card">
+          <div class="buddy-card-icon">🤝</div>
+          <div class="buddy-card-title">Users I Support as a Buddy</div>
+          <div class="buddy-card-desc">View users who have added you as their buddy to help them reset their password.</div>
+          <div class="buddy-card-note">ℹ️ Need to assist someone else? <a style="color:var(--navy);cursor:pointer;">Search the Identity Directory</a></div>
+          <div class="buddy-card-footer">
+            <span class="buddy-count">5 users</span>
+            <button class="btn btn-outline">Manage Assigned List</button>
+          </div>
+        </div>
+
+        <!-- Manager card — shown only if manager role -->
+        <div class="buddy-card" style="border: 1px solid var(--gray-200);">
+          <div class="buddy-card-icon">👔</div>
+          <div class="buddy-card-title">My Team <span style="font-size:10px; background:var(--blue-info-light); color:var(--blue-info); padding:2px 6px; border-radius:4px; font-weight:600; vertical-align:middle;">Manager</span></div>
+          <div class="buddy-card-desc">As a manager, you have inherent authority to reset passwords for your direct reports.</div>
+          <div class="buddy-card-footer">
+            <span class="buddy-count">30 reports</span>
+            <button class="btn btn-outline">Manage Team</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reset Password</div>
+        <div class="modal-subtitle">System: Windows login (Europe)</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('resetModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-input" id="mpw1" oninput="checkModalPassword()" placeholder="Enter new password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="mpw2" onblur="checkModalMatch()" oninput="checkModalMatchLive()" placeholder="Re-enter new password">
+      </div>
+      <div class="req-section-label">Password Requirements</div>
+      <div class="req-grid">
+        <div class="req-item req-fail" id="mreq-len"><span class="dot dot-red" id="mdot-len"></span> Min 12 chars</div>
+        <div class="req-item req-fail" id="mreq-upper"><span class="dot dot-red" id="mdot-upper"></span> At least 1 uppercase</div>
+        <div class="req-item req-fail" id="mreq-num"><span class="dot dot-red" id="mdot-num"></span> At least 1 number</div>
+        <div class="req-item req-fail" id="mreq-special"><span class="dot dot-red" id="mdot-special"></span> At least 1 special char</div>
+        <div class="req-item req-fail" id="mreq-match"><span class="dot dot-red" id="mdot-match"></span> Passwords match</div>
+      </div>
+      <div style="margin-top: 16px; display: flex; align-items: center; gap: 6px;">
+        <span class="in-a-rush">Not sure what to set?</span>
+        <span class="temp-link" onclick="closeModal('resetModal'); openModal('tempModal')">Generate a temporary password instead</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('resetModal')">Cancel</button>
+      <button class="btn btn-primary" id="mSetPasswordBtn" disabled onclick="doModalSetPassword()">Set Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Temp Password Modal -->
+<div class="modal-overlay" id="tempModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Reset Password</div>
+        <div class="modal-subtitle">System: Windows login (Europe)</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('tempModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Temporary Password Generated</div>
+        <div class="success-desc">Use the password below to log in. Change it immediately upon your first login.</div>
+        <div class="temp-password-box">
+          <span id="tempPwDisplay">xK9#mP2!qL5</span>
+          <button class="copy-btn" onclick="copyTemp()" title="Copy to clipboard">📋</button>
+        </div>
+        <div class="success-note">⚠️ This password expires in 24 hours</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('tempModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sync Modal -->
+<div class="modal-overlay" id="syncModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Sync Validation Accounts</div>
+        <div class="modal-subtitle">Target Identity: Sarika Singh</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('syncModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-banner">
+        ℹ️ This will securely copy your current Production password to the selected validation environments.
+      </div>
+      <div class="section-label">Select Environment</div>
+
+      <div class="domain-row" id="m-domain-asv" onclick="toggleModalDomain('asv')">
+        <input type="checkbox" id="m-chk-asv">
+        <div class="domain-info">
+          <div class="domain-name">AS-V Domain</div>
+          <div class="domain-meta">
+            <span class="dot dot-green"></span> Active
+            <span class="tag-synced">✔ Synced</span>
+            <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-row recommended selected" id="m-domain-acdslan" onclick="toggleModalDomain('acdslan')">
+        <input type="checkbox" id="m-chk-acdslan" checked>
+        <div class="domain-info">
+          <div class="domain-name">ACDSLAN-V Domain <span class="tag-recommended">Recommended</span></div>
+          <div class="domain-meta">
+            <span class="dot dot-green"></span> Active
+            <span class="tag-outofsync">⚠ Out of sync</span>
+            <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="domain-row" id="m-domain-acdsdmz" onclick="toggleModalDomain('acdsdmz')">
+        <input type="checkbox" id="m-chk-acdsdmz">
+        <div class="domain-info">
+          <div class="domain-name">ACDSDMZ-V Domain</div>
+          <div class="domain-meta">
+            <span class="dot dot-green"></span> Active
+            <span class="tag-synced">✔ Synced</span>
+            <span>🕐 Last sync: Jan 20, 2026 (9 days ago)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('syncModal')">Cancel</button>
+      <button class="btn btn-primary" id="mSyncBtn" onclick="doModalSync()">Sync Domains</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Screen switching
+  function showScreen(name, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    if (btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+
+  // Modal
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+  }
+
+  // Password validation — INLINE (screen)
+  function checkPassword() {
+    const pw = document.getElementById('pw1').value;
+    updateReq('req-len', pw.length >= 12);
+    updateReq('req-upper', /[A-Z]/.test(pw));
+    updateReq('req-num', /[0-9]/.test(pw));
+    updateReq('req-special', /[^a-zA-Z0-9]/.test(pw));
+    checkMatchLive();
+    updateSetBtn();
+  }
+  function checkMatchLive() {
+    // Only show error after user has typed in confirm field
+    const pw2 = document.getElementById('pw2');
+    if (pw2.value.length > 0) checkMatch();
+  }
+  function checkMatch() {
+    const match = document.getElementById('pw1').value === document.getElementById('pw2').value
+      && document.getElementById('pw2').value.length > 0;
+    updateReq('req-match', match);
+    updateSetBtn();
+  }
+  function updateReq(id, pass) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'req-item ' + (pass ? 'req-pass' : 'req-fail');
+    el.querySelector('.dot').className = 'dot ' + (pass ? 'dot-green' : 'dot-red');
+  }
+  function updateSetBtn() {
+    const pw = document.getElementById('pw1').value;
+    const pw2 = document.getElementById('pw2').value;
+    const valid = pw.length >= 12 && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^a-zA-Z0-9]/.test(pw) && pw === pw2 && pw2.length > 0;
+    document.getElementById('setPasswordBtn').disabled = !valid;
+  }
+  function doSetPassword() { showToast('✅ Password updated successfully'); }
+
+  // Modal password validation
+  function checkModalPassword() {
+    const pw = document.getElementById('mpw1').value;
+    updateMReq('mreq-len', 'mdot-len', pw.length >= 12);
+    updateMReq('mreq-upper', 'mdot-upper', /[A-Z]/.test(pw));
+    updateMReq('mreq-num', 'mdot-num', /[0-9]/.test(pw));
+    updateMReq('mreq-special', 'mdot-special', /[^a-zA-Z0-9]/.test(pw));
+    checkModalMatchLive();
+    updateMSetBtn();
+  }
+  function checkModalMatchLive() {
+    const pw2 = document.getElementById('mpw2');
+    if (pw2.value.length > 0) checkModalMatch();
+  }
+  function checkModalMatch() {
+    const match = document.getElementById('mpw1').value === document.getElementById('mpw2').value
+      && document.getElementById('mpw2').value.length > 0;
+    updateMReq('mreq-match', 'mdot-match', match);
+    updateMSetBtn();
+  }
+  function updateMReq(id, dotId, pass) {
+    const el = document.getElementById(id);
+    const dot = document.getElementById(dotId);
+    if (!el || !dot) return;
+    el.className = 'req-item ' + (pass ? 'req-pass' : 'req-fail');
+    dot.className = 'dot ' + (pass ? 'dot-green' : 'dot-red');
+  }
+  function updateMSetBtn() {
+    const pw = document.getElementById('mpw1').value;
+    const pw2 = document.getElementById('mpw2').value;
+    const valid = pw.length >= 12 && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^a-zA-Z0-9]/.test(pw) && pw === pw2 && pw2.length > 0;
+    document.getElementById('mSetPasswordBtn').disabled = !valid;
+  }
+  function doModalSetPassword() {
+    closeModal('resetModal');
+    showToast('✅ Password updated successfully');
+    // Clear expiry badge
+    document.querySelectorAll('.badge-warning').forEach(b => b.remove());
+  }
+
+  // Domain toggle — sync page
+  function toggleDomain(name) {
+    const chk = document.getElementById('chk-' + name);
+    const row = document.getElementById('domain-' + name);
+    chk.checked = !chk.checked;
+    row.classList.toggle('selected', chk.checked);
+    updateSyncBtn();
+  }
+  function updateSyncBtn() {
+    const anyChecked = ['asv','acdslan','acdsdmz'].some(n => document.getElementById('chk-' + n)?.checked);
+    const btn = document.getElementById('syncBtn');
+    if (btn) btn.disabled = !anyChecked;
+  }
+  function doSync() { showToast('✅ Domains synced successfully'); }
+
+  // Domain toggle — modal
+  function toggleModalDomain(name) {
+    const chk = document.getElementById('m-chk-' + name);
+    const row = document.getElementById('m-domain-' + name);
+    chk.checked = !chk.checked;
+    row.classList.toggle('selected', chk.checked);
+  }
+  function doModalSync() {
+    closeModal('syncModal');
+    showToast('✅ Domains synced successfully');
+    document.querySelectorAll('.needs-sync-badge').forEach(b => b.remove());
+  }
+
+  // Copy temp password
+  function copyTemp() {
+    const pw = document.getElementById('tempPwDisplay').textContent;
+    navigator.clipboard.writeText(pw).then(() => showToast('📋 Password copied to clipboard'));
+  }
+
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+</script>
+</body>
+</html>
